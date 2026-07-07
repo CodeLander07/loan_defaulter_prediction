@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: loan_risk_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: loan_risk_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: risk_intelligence_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:admin@db:5432/loan_risk_db
+      - JWT_SECRET=super-secret-key-for-local-development
+      - JWT_ALGORITHM=HS256
+      - BYPASS_AUTH=true
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 class MacroRiskRequest(BaseModel):
     """Payload for the macro‑risk POST endpoint."""
+    loan_application_id: UUID = Field(..., description="Reference UUID for the loan application")
     loan_amount: float = Field(..., description="Requested loan amount")
     loan_type: str = Field(..., description="Loan product type (e.g., SME, Home)")
     industry: str = Field(..., description="Borrower industry")
@@ -16,14 +17,14 @@ class MacroRiskRequest(BaseModel):
 
 
 class MacroRiskResponse(BaseModel):
-    """Returned after POST – contains the async task ID."""
-    task_id: UUID = Field(..., description="Unique identifier for the background processing task")
+    """Returned after POST – contains the task ID or status."""
+    task_id: UUID = Field(..., description="Unique identifier for the processing task")
 
 
 class MacroRiskResult(BaseModel):
-    """Returned by GET /{task_id} once processing finishes."""
-    task_id: UUID = Field(..., description="Task identifier")
-    score: int = Field(..., ge=0, le=100, description="Macro‑risk score (0‑100)")
+    """Result of macro risk evaluation."""
+    loan_application_id: UUID = Field(..., description="Reference UUID for the loan application")
+    macro_risk_score: int = Field(..., ge=0, le=100, description="Macro‑risk score (0‑100)")
     risk_category: str = Field(..., description="Low / Medium / High")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Overall confidence (0‑1)")
     contributing_factors: Dict[str, float] = Field(default_factory=dict, description="Weight‑adjusted factor contributions")

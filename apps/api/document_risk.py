@@ -2,16 +2,19 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFi
 from uuid import UUID
 from typing import List
 
-from apps.schemas.document import DocumentRiskRequest, DocumentRiskResponse
+from apps.schemas.document import DocumentRiskResponse, DocumentRiskResult
 from apps.services.document_service import DocumentRiskService
+from apps.middleware.auth_middleware import RoleChecker
 
-router = APIRouter()
+# Secure entire router so only users with "risk_engineer" role can access it
+require_risk_engineer = RoleChecker(allowed_roles=["risk_engineer"])
+router = APIRouter(dependencies=[Depends(require_risk_engineer)])
 
 @router.post("/", response_model=DocumentRiskResponse)
 async def evaluate_document_risk(
     loan_application_id: UUID,
     documents: List[UploadFile] = File(...),
-    background_tasks: BackgroundTasks,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     service: DocumentRiskService = Depends(DocumentRiskService),
 ):
     """Accept documents, kick off async processing, and return a task ID.
@@ -24,17 +27,26 @@ async def evaluate_document_risk(
             files=documents,
             background_tasks=background_tasks,
         )
+        return DocumentRiskResponse(task_id=task_id)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    return DocumentRiskResponse(task_id=task_id)
 
-@router.get("/{task_id}", response_model=DocumentRiskResponse)
+@router.get("/{task_id}", response_model=DocumentRiskResult)
 async def get_document_risk_result(
     task_id: UUID,
     service: DocumentRiskService = Depends(DocumentRiskService),
 ):
     """Fetch the completed risk result for a previously submitted request."""
-    result = await service.get_result(task_id)
-    if result is None:
-        raise HTTPException(status_code=404, detail="Result not found or still processing")
-    return result
+    try:
+        result = await service.get_result(task_id)
+        if result is None:
+            # Task is still processing
+            raise HTTPException(
+                status_code=202,
+                detail="Evaluation is still in progress. Please poll again in a few seconds."
+            )
+        return result
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
