@@ -22,4 +22,9 @@ uvicorn==0.50.0
 PyJWT==2.13.0
 python-multipart==0.0.32
 
-
+# ML dependencies
+xgboost==2.1.4
+pandas==2.2.3
+numpy==2.2.4
+scikit-learn==1.6.1
+joblib==1.4.2

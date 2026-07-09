@@ -1,6 +1,6 @@
 
 from fastapi import FastAPI
-from apps.api import document_risk, macro_risk
+from apps.api import document_risk, macro_risk, financial_risk
 
 from apps.database import engine
 from apps.database import Base
@@ -14,6 +14,7 @@ app = FastAPI(
 
 app.include_router(document_risk.router, prefix="/api/document-risk", tags=["Document Risk"])
 app.include_router(macro_risk.router, prefix="/api/macro-risk", tags=["Macro Risk"])
+app.include_router(financial_risk.router, prefix="/api/financial-risk", tags=["Financial Risk"])
 
 
 @app.get("/")

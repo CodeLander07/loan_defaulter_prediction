@@ -10,6 +10,9 @@ from apps.models.macro_models import (
     MacroIndicator,
     MacroRiskScore,
 )
+from apps.models.financial_models import (
+    FinancialRiskScore,
+)
 
 __all__ = [
     "LoanApplication",
@@ -20,4 +23,5 @@ __all__ = [
     "DocumentRiskScore",
     "MacroIndicator",
     "MacroRiskScore",
+    "FinancialRiskScore",
 ]

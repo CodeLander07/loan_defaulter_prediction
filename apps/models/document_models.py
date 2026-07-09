@@ -26,6 +26,9 @@ class LoanApplication(Base):
     macro_risk_score = relationship(
         "MacroRiskScore", uselist=False, back_populates="loan_application", cascade="all, delete-orphan"
     )
+    financial_risk_score = relationship(
+        "FinancialRiskScore", uselist=False, back_populates="loan_application", cascade="all, delete-orphan"
+    )
 
 
 class UploadedDocument(Base):
